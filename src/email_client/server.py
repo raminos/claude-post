@@ -26,8 +26,9 @@ load_dotenv()
 
 # Email configuration
 EMAIL_CONFIG = {
-    "email": os.getenv("EMAIL_ADDRESS", "your.email@gmail.com"),
+    "email": os.getenv("EMAIL_USERNAME", "your.email@gmail.com"),
     "password": os.getenv("EMAIL_PASSWORD", "your-app-specific-password"),
+    "name": os.getenv("NAME", "Your Name"),
     "imap_server": os.getenv("IMAP_SERVER", "imap.gmail.com"),
     "smtp_server": os.getenv("SMTP_SERVER", "smtp.gmail.com"),
     "smtp_port": int(os.getenv("SMTP_PORT", "587"))
@@ -123,7 +124,7 @@ async def send_email_async(
     try:
         # Create message
         msg = MIMEMultipart()
-        msg['From'] = EMAIL_CONFIG["email"]
+        msg['From'] = f"{EMAIL_CONFIG['name']} <{EMAIL_CONFIG['email']}>"
         msg['To'] = ', '.join(to_addresses)
         if cc_addresses:
             msg['Cc'] = ', '.join(cc_addresses)

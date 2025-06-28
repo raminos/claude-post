@@ -47,7 +47,7 @@ A Model Context Protocol (MCP) server that provides a seamless email management 
 
    ```bash
    # Clone the repository
-   git clone https://github.com/ZilongXue/claude-post.git
+   git clone https://github.com/raminos/claude-post.git
    cd claude-post
 
    # Create and activate virtual environment
@@ -61,7 +61,8 @@ A Model Context Protocol (MCP) server that provides a seamless email management 
 3. Create a `.env` file in the project root:
 
    ```env
-   EMAIL_ADDRESS=your.email@gmail.com
+   NAME="Your Name"
+   EMAIL_USERNAME=your.email@gmail.com
    EMAIL_PASSWORD=your-app-specific-password
    IMAP_SERVER=imap.gmail.com
    SMTP_SERVER=smtp.gmail.com
