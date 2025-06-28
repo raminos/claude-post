@@ -26,9 +26,10 @@ load_dotenv()
 
 # Email configuration
 EMAIL_CONFIG = {
-    "email": os.getenv("EMAIL_USERNAME", "your.email@gmail.com"),
+    "username": os.getenv("EMAIL_USERNAME", "your.email@gmail.com"),
     "password": os.getenv("EMAIL_PASSWORD", "your-app-specific-password"),
     "name": os.getenv("NAME", "Your Name"),
+    "default_email": os.getenv("DEFAULT_EMAIL"),
     "imap_server": os.getenv("IMAP_SERVER", "imap.gmail.com"),
     "smtp_server": os.getenv("SMTP_SERVER", "smtp.gmail.com"),
     "smtp_port": int(os.getenv("SMTP_PORT", "587"))
@@ -125,7 +126,7 @@ async def send_email_async(
     """Asynchronously send an email with optional custom sender."""
     try:
         # Use provided sender info or fall back to defaults
-        from_email = sender_email or EMAIL_CONFIG["email"]
+        from_email = sender_email or EMAIL_CONFIG["default_email"] or EMAIL_CONFIG["username"]
         from_name = sender_name or EMAIL_CONFIG["name"]
         
         # Create message
@@ -150,13 +151,13 @@ async def send_email_async(
                 server.starttls()
                 
                 # Login
-                logging.debug(f"Logging in as {EMAIL_CONFIG['email']}")
-                server.login(EMAIL_CONFIG["email"], EMAIL_CONFIG["password"])
+                logging.debug(f"Logging in as {EMAIL_CONFIG['username']}")
+                server.login(EMAIL_CONFIG["username"], EMAIL_CONFIG["password"])
                 
                 # Send email
                 all_recipients = to_addresses + (cc_addresses or [])
                 logging.debug(f"Sending email from {from_name} <{from_email}> to: {all_recipients}")
-                result = server.send_message(msg, EMAIL_CONFIG["email"], all_recipients)
+                result = server.send_message(msg, from_email, all_recipients)
                 
                 if result:
                     # send_message returns a dict of failed recipients
@@ -303,7 +304,8 @@ async def handle_call_tool(
             
             try:
                 # Determine actual sender info that will be used
-                actual_sender_email = sender_email or EMAIL_CONFIG["email"]
+                # Priority: sender_email -> DEFAULT_EMAIL -> EMAIL_USERNAME
+                actual_sender_email = sender_email or EMAIL_CONFIG["default_email"] or EMAIL_CONFIG["username"]
                 actual_sender_name = sender_name or EMAIL_CONFIG["name"]
                 
                 logging.info("Attempting to send email")
@@ -334,7 +336,7 @@ async def handle_call_tool(
         
         # Connect to IMAP server using predefined credentials
         mail = imaplib.IMAP4_SSL(EMAIL_CONFIG["imap_server"])
-        mail.login(EMAIL_CONFIG["email"], EMAIL_CONFIG["password"])
+        mail.login(EMAIL_CONFIG["username"], EMAIL_CONFIG["password"])
         
         if name == "search-emails":
             # 选择文件夹

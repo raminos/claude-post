@@ -67,6 +67,7 @@ A Model Context Protocol (MCP) server that provides a seamless email management 
    IMAP_SERVER=imap.gmail.com
    SMTP_SERVER=smtp.gmail.com
    SMTP_PORT=587
+   DEFAULT_EMAIL=your.preferred.email@gmail.com  # Optional: default sender email
    ```
 
 4. Configure Claude Desktop:
@@ -151,7 +152,12 @@ You can now specify a custom sender email and display name when sending emails:
 - **sender_email**: Specify which email address to send from (will use the default SMTP credentials for authentication)
 - **sender_name**: Specify the display name that recipients will see
 
-If not specified, the default NAME and EMAIL_USERNAME from your .env file will be used.
+**Email Address Priority**: When no custom sender_email is specified, the system uses this priority order:
+
+1. **DEFAULT_EMAIL** (if set in .env) - Your preferred default sender email
+2. **EMAIL_USERNAME** - The account used for SMTP authentication
+
+If not specified, the default NAME from your .env file will be used for the display name.
 
 ## Project Structure
 
