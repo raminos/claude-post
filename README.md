@@ -139,8 +139,19 @@ You can interact with your emails using natural language commands. Here are some
 
 - "I want to send an email to john@example.com"
 - "Send a meeting confirmation to team@company.com"
+- "Send an email from my work account to client@company.com"
+- "Send an email as 'John Smith' from john.smith@company.com to team@example.com"
 
 Note: For security reasons, Claude will always show you the email details for confirmation before actually sending.
+
+#### Custom Sender Support
+
+You can now specify a custom sender email and display name when sending emails:
+
+- **sender_email**: Specify which email address to send from (will use the default SMTP credentials for authentication)
+- **sender_name**: Specify the display name that recipients will see
+
+If not specified, the default NAME and EMAIL_USERNAME from your .env file will be used.
 
 ## Project Structure
 

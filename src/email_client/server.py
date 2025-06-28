@@ -118,13 +118,19 @@ async def send_email_async(
     to_addresses: list[str],
     subject: str,
     content: str,
-    cc_addresses: list[str] | None = None
+    cc_addresses: list[str] | None = None,
+    sender_email: str | None = None,
+    sender_name: str | None = None
 ) -> None:
-    """Asynchronously send an email."""
+    """Asynchronously send an email with optional custom sender."""
     try:
+        # Use provided sender info or fall back to defaults
+        from_email = sender_email or EMAIL_CONFIG["email"]
+        from_name = sender_name or EMAIL_CONFIG["name"]
+        
         # Create message
         msg = MIMEMultipart()
-        msg['From'] = f"{EMAIL_CONFIG['name']} <{EMAIL_CONFIG['email']}>"
+        msg['From'] = f"{from_name} <{from_email}>"
         msg['To'] = ', '.join(to_addresses)
         if cc_addresses:
             msg['Cc'] = ', '.join(cc_addresses)
@@ -149,7 +155,7 @@ async def send_email_async(
                 
                 # Send email
                 all_recipients = to_addresses + (cc_addresses or [])
-                logging.debug(f"Sending email to: {all_recipients}")
+                logging.debug(f"Sending email from {from_name} <{from_email}> to: {all_recipients}")
                 result = server.send_message(msg, EMAIL_CONFIG["email"], all_recipients)
                 
                 if result:
@@ -233,7 +239,7 @@ async def handle_list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="send-email",
-            description="CONFIRMATION STEP: Actually send the email after user confirms the details. Before calling this, first show the email details to the user for confirmation. Required fields: recipients (to), subject, and content. Optional: CC recipients.",
+            description="CONFIRMATION STEP: Actually send the email after user confirms the details. Before calling this, first show the email details to the user for confirmation. Required fields: recipients (to), subject, and content. Optional: CC recipients, sender_email, and sender_name.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -254,6 +260,14 @@ async def handle_list_tools() -> list[types.Tool]:
                         "type": "array",
                         "items": {"type": "string"},
                         "description": "List of CC recipient email addresses (optional, confirmed)",
+                    },
+                    "sender_email": {
+                        "type": "string",
+                        "description": "Email address to send from (optional, uses default if not specified)",
+                    },
+                    "sender_name": {
+                        "type": "string",
+                        "description": "Display name for the sender (optional, uses default if not specified)",
                     },
                 },
                 "required": ["to", "subject", "content"],
@@ -278,6 +292,8 @@ async def handle_call_tool(
             subject = arguments.get("subject", "")
             content = arguments.get("content", "")
             cc_addresses = arguments.get("cc", [])
+            sender_email = arguments.get("sender_email")
+            sender_name = arguments.get("sender_name")
             
             if not to_addresses:
                 return [types.TextContent(
@@ -286,16 +302,21 @@ async def handle_call_tool(
                 )]
             
             try:
+                # Determine actual sender info that will be used
+                actual_sender_email = sender_email or EMAIL_CONFIG["email"]
+                actual_sender_name = sender_name or EMAIL_CONFIG["name"]
+                
                 logging.info("Attempting to send email")
                 logging.info(f"To: {to_addresses}")
                 logging.info(f"Subject: {subject}")
                 logging.info(f"CC: {cc_addresses}")
+                logging.info(f"Sender: {actual_sender_name} <{actual_sender_email}>")
                 
                 async with asyncio.timeout(SEARCH_TIMEOUT):
-                    await send_email_async(to_addresses, subject, content, cc_addresses)
+                    await send_email_async(to_addresses, subject, content, cc_addresses, sender_email, sender_name)
                     return [types.TextContent(
                         type="text",
-                        text="Email sent successfully! Check email_client.log for detailed logs."
+                        text=f"Email sent successfully from {actual_sender_name} <{actual_sender_email}>! Check email_client.log for detailed logs."
                     )]
             except asyncio.TimeoutError:
                 logging.error("Operation timed out while sending email")
